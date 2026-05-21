@@ -1,10 +1,36 @@
 import { useState } from 'react'
 
-export default function Pagos({ nominas = [], pagos = [], onAddPago }) {
-  const [form, setForm] = useState({ nominaId: '', monto: '', fecha: '' })
+export default function Pagos({ nominas = [], pagos = [], deducciones = [], bonificaciones = [], onAddPago }) {
+  const [form, setForm] = useState({ nominaId: '', fecha: '' })
   const [mensaje, setMensaje] = useState('')
 
   const selectedNomina = nominas.find((item) => item.id === Number(form.nominaId))
+
+  const selectedNominaSalario = selectedNomina
+    ? Number(String(selectedNomina.salarioBase ?? selectedNomina.salario ?? 0).replace(/[^0-9.-]+/g, ''))
+    : 0
+
+  const totalDeducciones = selectedNomina
+    ? deducciones
+        .filter((item) => item.empleadoDocumento === selectedNomina.empleadoDocumento)
+        .reduce(
+          (sum, item) => sum + Number(String(item.valor || 0).replace(/[^0-9.-]+/g, '')),
+          0,
+        )
+    : 0
+
+  const totalBonificaciones = selectedNomina
+    ? bonificaciones
+        .filter((item) => item.empleadoDocumento === selectedNomina.empleadoDocumento)
+        .reduce(
+          (sum, item) => sum + Number(String(item.valor || 0).replace(/[^0-9.-]+/g, '')),
+          0,
+        )
+    : 0
+
+  const montoCalculado = selectedNomina
+    ? selectedNominaSalario + totalBonificaciones - totalDeducciones
+    : ''
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -17,15 +43,21 @@ export default function Pagos({ nominas = [], pagos = [], onAddPago }) {
       if (!selectedNomina) {
         throw new Error('Selecciona primero una nómina')
       }
+      if (!form.fecha) {
+        throw new Error('Selecciona una fecha de pago')
+      }
+      if (Number.isNaN(montoCalculado)) {
+        throw new Error('El monto calculado no es válido. Revisa la nómina y las deducciones.')
+      }
       onAddPago({
         nominaId: selectedNomina.id,
-        monto: form.monto,
+        monto: montoCalculado,
         fecha: form.fecha,
         empleadoNombre: selectedNomina.empleadoNombre,
         periodo: selectedNomina.periodo,
       })
       setMensaje(`Pago registrado para ${selectedNomina.empleadoNombre}`)
-      setForm({ nominaId: '', monto: '', fecha: '' })
+      setForm({ nominaId: '', fecha: '' })
     } catch (error) {
       setMensaje(error.message)
     }
@@ -44,12 +76,26 @@ export default function Pagos({ nominas = [], pagos = [], onAddPago }) {
               </option>
             ))}
           </select>
-          <input
-            name="monto"
-            value={form.monto}
-            onChange={handleChange}
-            placeholder="Monto"
-          />
+
+          <div className="pago-detalle">
+            <div>
+              <strong>Salario base:</strong>
+              <span>{selectedNomina ? selectedNominaSalario : '-'}</span>
+            </div>
+            <div>
+              <strong>Bonificaciones:</strong>
+              <span>{selectedNomina ? totalBonificaciones : 0}</span>
+            </div>
+            <div>
+              <strong>Deducciones:</strong>
+              <span>{selectedNomina ? totalDeducciones : 0}</span>
+            </div>
+            <div>
+              <strong>Monto a pagar:</strong>
+              <span>{selectedNomina ? montoCalculado : '-'}</span>
+            </div>
+          </div>
+
           <input
             name="fecha"
             type="date"

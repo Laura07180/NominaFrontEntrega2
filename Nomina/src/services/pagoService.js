@@ -1,30 +1,17 @@
-import { parseStorage, saveStorage } from './storageService.js'
+import { BASE } from './apiConfig.js'
 
-const PAGOS_KEY = 'nomina_pagos'
-
-export const getPagos = () => parseStorage(PAGOS_KEY, [])
-
-export const savePagos = (pagos) => {
-  saveStorage(PAGOS_KEY, pagos)
+export async function getPagos() {
+  const res = await fetch(`${BASE}/pagos`)
+  return res.json()
 }
-
-export const addPago = ({ nominaId, monto, fecha, empleadoNombre, periodo }) => {
-  if (!nominaId || !monto || !fecha || !empleadoNombre || !periodo) {
-    throw new Error('Todos los campos de pago son obligatorios')
-  }
-
-  const pagos = getPagos()
-  const nextId = pagos.length ? Math.max(...pagos.map((item) => item.id)) + 1 : 1
-  const newPago = {
-    id: nextId,
-    nominaId,
-    monto,
-    fecha,
-    empleadoNombre,
-    periodo,
-  }
-
-  const updated = [...pagos, newPago]
-  savePagos(updated)
-  return newPago
+ 
+export async function addPago(pagoData) {
+  const res = await fetch(`${BASE}/pagos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(pagoData)
+  })
+  return res.json()
 }
+ 
+ 

@@ -1,20 +1,38 @@
 import { useState } from 'react'
 
 export default function Emplaeados({ employees = [], cargos = [], onAddEmployee }) {
-  const [form, setForm] = useState({ nombre: '', documento: '', salario: '', cargo: '' })
+  const [form, setForm] = useState({ nombre: '', documento: '', salario: '', cargo: '', cargoId: '' })
   const [mensaje, setMensaje] = useState('')
 
   const handleChange = (event) => {
     const { name, value } = event.target
+
+    if (name === 'cargoId') {
+      const selectedCargo = cargos.find((cargoItem) => cargoItem.id === Number(value))
+      setForm((prev) => ({
+        ...prev,
+        cargoId: value,
+        cargo: selectedCargo ? selectedCargo.nombre : '',
+        salario: selectedCargo ? selectedCargo.salarioBase : '',
+      }))
+      return
+    }
+
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = (event) => {
     event.preventDefault()
     try {
-      const employee = onAddEmployee(form)
-      setMensaje(`Empleado ${employee.nombre} registrado`) 
-      setForm({ nombre: '', documento: '', salario: '', cargo: '' })
+      const employeeData = {
+        nombre: form.nombre,
+        documento: form.documento,
+        salario: form.salario,
+        cargo: form.cargo,
+      }
+      const employee = onAddEmployee(employeeData)
+      setMensaje(`Empleado ${employee.nombre} registrado`)
+      setForm({ nombre: '', documento: '', salario: '', cargo: '', cargoId: '' })
     } catch (error) {
       setMensaje(error.message)
     }
@@ -40,13 +58,13 @@ export default function Emplaeados({ employees = [], cargos = [], onAddEmployee 
           <input
             name="salario"
             value={form.salario}
-            onChange={handleChange}
-            placeholder="Salario"
+            readOnly
+            placeholder="Salario se carga desde el cargo"
           />
-          <select name="cargo" value={form.cargo} onChange={handleChange}>
+          <select name="cargoId" value={form.cargoId} onChange={handleChange}>
             <option value="">Selecciona un cargo</option>
             {cargos.map((cargoItem) => (
-              <option key={cargoItem.id} value={cargoItem.nombre}>
+              <option key={cargoItem.id} value={cargoItem.id}>
                 {cargoItem.nombre}
               </option>
             ))}

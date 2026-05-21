@@ -5,6 +5,18 @@ export default function MisGastos({ user, movimientos = [] }) {
   const totalDeducciones = movimientos.filter((m) => m.tipo === 'Deducción').length
   const totalBonificaciones = movimientos.filter((m) => m.tipo === 'Bonificación').length
 
+  // Calcular nómina final (neto): suma de pagos menos deducciones más bonificaciones
+  const totalPagosValor = movimientos
+    .filter((m) => m.tipo === 'Pago')
+    .reduce((sum, m) => sum + Number(m.valor || 0), 0)
+  const totalDeduccionesValor = movimientos
+    .filter((m) => m.tipo === 'Deducción')
+    .reduce((sum, m) => sum + Number(m.valor || 0), 0)
+  const totalBonificacionesValor = movimientos
+    .filter((m) => m.tipo === 'Bonificación')
+    .reduce((sum, m) => sum + Number(m.valor || 0), 0)
+  const nominaFinal = totalPagosValor + totalBonificacionesValor - totalDeduccionesValor
+
   return (
     <div id="mis-gastos" className="vista">
       <h2>Movimientos de {user?.nombres}</h2>
@@ -29,6 +41,11 @@ export default function MisGastos({ user, movimientos = [] }) {
           <strong>Bonificaciones:</strong>
           <div>{totalBonificaciones}</div>
         </div>
+      </div>
+
+      <div className="nomina-final" style={{ margin: '20px 0', padding: '10px', background: '#e6f7ff', borderRadius: '8px' }}>
+        <strong>Nómina final (neto): </strong>
+        <span style={{ fontWeight: 'bold', color: '#007bff' }}>{nominaFinal.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}</span>
       </div>
 
       <div className="table-responsive">

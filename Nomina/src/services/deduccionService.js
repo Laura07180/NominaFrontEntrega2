@@ -1,29 +1,22 @@
-import { parseStorage, saveStorage } from './storageService.js'
+ 
+import { BASE } from './apiConfig.js'
 
-const DEDUCCIONES_KEY = 'nomina_deducciones'
-
-export const getDeducciones = () => parseStorage(DEDUCCIONES_KEY, [])
-
-export const saveDeducciones = (deducciones) => {
-  saveStorage(DEDUCCIONES_KEY, deducciones)
+export async function getDeducciones() {
+  const res = await fetch(`${BASE}/deducciones`)
+  return res.json()
 }
-
-export const addDeduccion = ({ empleadoDocumento, tipo, valor, empleadoNombre }) => {
-  if (!empleadoDocumento || !tipo || !valor || !empleadoNombre) {
-    throw new Error('Todos los campos de deducción son obligatorios')
-  }
-
-  const deducciones = getDeducciones()
-  const nextId = deducciones.length ? Math.max(...deducciones.map((item) => item.id)) + 1 : 1
-  const newDeduccion = {
-    id: nextId,
-    empleadoDocumento,
-    tipo,
-    valor,
-    empleadoNombre,
-  }
-
-  const updated = [...deducciones, newDeduccion]
-  saveDeducciones(updated)
-  return newDeduccion
+ 
+export async function getDeduccionesByDocumento(documento) {
+  const res = await fetch(`${BASE}/deducciones/empleado/${documento}`)
+  return res.json()
 }
+ 
+export async function addDeduccion(deduccionData) {
+  const res = await fetch(`${BASE}/deducciones`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(deduccionData)
+  })
+  return res.json()
+}
+ 

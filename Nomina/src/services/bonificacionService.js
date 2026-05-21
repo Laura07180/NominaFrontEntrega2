@@ -1,29 +1,23 @@
-import { parseStorage, saveStorage } from './storageService.js'
 
-const BONIFICACIONES_KEY = 'nomina_bonificaciones'
+ 
+import { BASE } from './apiConfig.js'
 
-export const getBonificaciones = () => parseStorage(BONIFICACIONES_KEY, [])
-
-export const saveBonificaciones = (bonificaciones) => {
-  saveStorage(BONIFICACIONES_KEY, bonificaciones)
+export async function getBonificaciones() {
+  const res = await fetch(`${BASE}/bonificaciones`)
+  return res.json()
 }
-
-export const addBonificacion = ({ empleadoDocumento, tipo, valor, empleadoNombre }) => {
-  if (!empleadoDocumento || !tipo || !valor || !empleadoNombre) {
-    throw new Error('Todos los campos de bonificación son obligatorios')
-  }
-
-  const bonificaciones = getBonificaciones()
-  const nextId = bonificaciones.length ? Math.max(...bonificaciones.map((item) => item.id)) + 1 : 1
-  const newBonificacion = {
-    id: nextId,
-    empleadoDocumento,
-    tipo,
-    valor,
-    empleadoNombre,
-  }
-
-  const updated = [...bonificaciones, newBonificacion]
-  saveBonificaciones(updated)
-  return newBonificacion
+ 
+export async function getBonificacionesByDocumento(documento) {
+  const res = await fetch(`${BASE}/bonificaciones/empleado/${documento}`)
+  return res.json()
 }
+ 
+export async function addBonificacion(bonificacionData) {
+  const res = await fetch(`${BASE}/bonificaciones`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(bonificacionData)
+  })
+  return res.json()
+}
+ 
